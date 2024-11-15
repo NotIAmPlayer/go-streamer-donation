@@ -1,16 +1,6 @@
 package main
 
 /*
-import (
-	"bufio"
-	"fmt"
-	"net"
-	"net/http"
-	"time"
-
-	"github.com/gorilla/websocket"
-)
-
 // Upgrader is used to upgrade HTTP connections to WebSocket connections.
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
@@ -54,8 +44,10 @@ func main() {
 		fmt.Println("Error starting server:", err)
 	}
 }
+*/
 
 // TCP: payment
+/*
 func handleConnection(conn net.Conn) {
 	addr := conn.RemoteAddr().String()
 
