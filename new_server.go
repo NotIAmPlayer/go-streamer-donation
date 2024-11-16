@@ -13,11 +13,12 @@ type User struct {
 	balance  int
 }
 
+// TCP Server
 func startTCPServer() {
 	ln, err := net.Listen("tcp", ":80")
 
 	if err != nil {
-		fmt.Println("TCP Server - Error:", err)
+		fmt.Println("TCP Server - Listening Error:", err)
 		return
 	}
 
@@ -27,7 +28,7 @@ func startTCPServer() {
 		conn, err := ln.Accept()
 
 		if err != nil {
-			fmt.Println("TCP Server - Error:", err)
+			fmt.Println("TCP Server - Connection Error:", err)
 		}
 
 		go handleTCPConnection(conn)
@@ -40,21 +41,76 @@ func handleTCPConnection(conn net.Conn) {
 	addr := conn.RemoteAddr().String()
 	input := bufio.NewScanner(conn)
 
+	fmt.Println(addr)
+
 	for input.Scan() {
 		txt := input.Text()
 
-		fmt.Println(txt)
+		//fmt.Println(txt, len(txt))
 
 		if len(txt) >= 7 {
-			if txt[0:7] == "client" {
-				viewers[addr] = User{username: txt[8:], balance: 0}
+			var reqType = txt[0:6]
+			var username = txt[7:]
+
+			fmt.Println(reqType, username)
+
+			if reqType == "client" { // Client-sent usernames
+				viewers[addr] = User{username: username, balance: 0}
 			}
 		}
 	}
 }
 
+// UDP Server
+func startUDPServer() {
+	addr, err := net.ResolveUDPAddr("udp", ":4080")
+
+	if err != nil {
+		fmt.Println("UDP Server - Address Resolving Error:", err)
+	}
+
+	ln, err := net.ListenUDP("udp", addr)
+
+	if err != nil {
+		fmt.Println("UDP Server - Listening Error:", err)
+	}
+
+	defer ln.Close()
+
+	for {
+		buf := make([]byte, 1024)
+		n, conn, err := ln.ReadFromUDP(buf)
+
+		if err != nil {
+			fmt.Println("UDP Server - Reading Error:", err)
+		}
+
+		var res = string(buf[0:n])
+		var reqType = string(buf[0:5])
+
+		switch reqType {
+		case "check":
+			var username = res[6:]
+			var viewer User
+
+			for _, v := range viewers {
+				fmt.Println(v.username, v.balance)
+
+				if v.username == username {
+					viewer = v
+					break
+				}
+			}
+
+			fmt.Println("u:", username, "v:", viewer.username, "b:", viewer.balance)
+		}
+
+		fmt.Println(res, reqType, conn)
+	}
+}
+
 func main() {
-	startTCPServer()
-	//go startUDPServer()
+	go startTCPServer()
+	startUDPServer()
 	//startWebsocketServer()
 }

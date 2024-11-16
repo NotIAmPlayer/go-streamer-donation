@@ -17,7 +17,7 @@ func connectTCPServer() {
 		fmt.Println("Error: ", err)
 	}
 
-	conn.Write([]byte("client:" + username))
+	conn.Write([]byte("client:" + username + "\n"))
 
 	done := make(chan struct{})
 	go func() {
@@ -38,13 +38,13 @@ func connectTCPServer() {
 		fmt.Print("> ")
 
 		fmt.Scan(&input)
-		fmt.Println(input)
 
 		switch input {
 		case "0":
 			break
 		case "1": // UDP
 			fmt.Println("Checking your balance...")
+			checkBalance(conn.LocalAddr().Network())
 		case "2": // UDP
 			var amountStr string
 			var amountInt int
@@ -83,8 +83,35 @@ func connectTCPServer() {
 	<-done
 }
 
+func checkBalance(addr string) {
+	connectUDPServer("check:" + username)
+}
+
 func topUpBalance(amount int) {
-	fmt.Println("Hello")
+	connectUDPServer("topup:" + username + string(amount))
+}
+
+func connectUDPServer(str string) {
+	addr, err := net.ResolveUDPAddr("udp", ":4080")
+
+	if err != nil {
+		fmt.Println("Client - Address Resolving Error:", err)
+	}
+
+	conn, err := net.DialUDP("udp", nil, addr)
+
+	defer conn.Close()
+
+	conn.Write([]byte(str))
+
+	buf := make([]byte, 1024)
+	n, err := conn.Read(buf)
+
+	if err != nil {
+		fmt.Println("Client - Error Reading Response:", err)
+	}
+
+	fmt.Println("Received ", string(buf[0:n]), " from the server")
 }
 
 func main() {
