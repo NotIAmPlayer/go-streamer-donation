@@ -22,7 +22,7 @@ func connectTCPServer() {
 	done := make(chan struct{})
 	go func() {
 		io.Copy(os.Stdout, conn)
-		fmt.Println("done")
+		//fmt.Println("done")
 		done <- struct{}{}
 	}()
 
@@ -44,7 +44,7 @@ func connectTCPServer() {
 			break
 		case "1": // UDP
 			fmt.Println("Checking your balance...")
-			checkBalance(conn.LocalAddr().Network())
+			checkBalance(conn.LocalAddr().String())
 		case "2": // UDP
 			var amountStr string
 			var amountInt int
@@ -65,7 +65,7 @@ func connectTCPServer() {
 				}
 			}
 
-			topUpBalance(amountInt)
+			topUpBalance(conn.LocalAddr().String(), amountInt)
 		case "3": //TCP
 			fmt.Println("Preparing sending donation...")
 		default:
@@ -84,11 +84,11 @@ func connectTCPServer() {
 }
 
 func checkBalance(addr string) {
-	connectUDPServer("check:" + username)
+	connectUDPServer("check:" + addr)
 }
 
-func topUpBalance(amount int) {
-	connectUDPServer("topup:" + username + string(amount))
+func topUpBalance(addr string, amount int) {
+	connectUDPServer("topup:" + addr + ":" + strconv.Itoa(amount))
 }
 
 func connectUDPServer(str string) {
@@ -111,7 +111,7 @@ func connectUDPServer(str string) {
 		fmt.Println("Client - Error Reading Response:", err)
 	}
 
-	fmt.Println("Received ", string(buf[0:n]), " from the server")
+	fmt.Println(string(buf[0:n]))
 }
 
 func main() {

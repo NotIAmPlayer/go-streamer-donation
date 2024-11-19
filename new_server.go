@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"net"
+	"strconv"
+	"strings"
 )
 
 var viewers = make(map[string]User)
@@ -85,24 +87,40 @@ func startUDPServer() {
 			fmt.Println("UDP Server - Reading Error:", err)
 		}
 
-		var res = string(buf[0:n])
-		var reqType = string(buf[0:5])
+		res := string(buf[0:n])
+		reqType := string(buf[0:5])
 
 		switch reqType {
 		case "check":
-			var username = res[6:]
-			var viewer User
+			clientAddr := res[6:]
+			var viewer User = viewers[clientAddr]
 
-			for _, v := range viewers {
-				fmt.Println(v.username, v.balance)
+			fmt.Println("u:", clientAddr, "v:", viewer.username, "b:", viewer.balance)
 
-				if v.username == username {
-					viewer = v
-					break
-				}
+			str := "Your balance is " + strconv.Itoa(viewer.balance) + "."
+			ln.WriteToUDP([]byte(str), conn)
+		case "topup":
+			str := res[6:]
+			strSlice := strings.Split(str, ":")
+			clientAddr := strSlice[0] + ":" + strSlice[1]
+			amountStr := strSlice[2]
+			amount, err := strconv.Atoi(amountStr)
+
+			var str2 string
+			var viewer User = viewers[clientAddr]
+
+			if err != nil {
+				str2 = "Amount invalid. Please try again."
+			} else {
+				viewer.balance += amount
+
+				viewers[clientAddr] = viewer
+				str2 = "Added " + amountStr + " to your balance."
 			}
 
-			fmt.Println("u:", username, "v:", viewer.username, "b:", viewer.balance)
+			fmt.Println(amountStr)
+			fmt.Println("u:", clientAddr, "a:", amount, "v:", viewer.username, "b:", viewer.balance)
+			ln.WriteToUDP([]byte(str2), conn)
 		}
 
 		fmt.Println(res, reqType, conn)
