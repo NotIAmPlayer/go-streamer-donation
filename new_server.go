@@ -4,8 +4,11 @@ import (
 	"bufio"
 	"fmt"
 	"net"
+	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/gorilla/websocket"
 )
 
 var viewers = make(map[string]User)
@@ -118,7 +121,6 @@ func startUDPServer() {
 				str2 = "Added " + amountStr + " to your balance."
 			}
 
-			fmt.Println(amountStr)
 			fmt.Println("u:", clientAddr, "a:", amount, "v:", viewer.username, "b:", viewer.balance)
 			ln.WriteToUDP([]byte(str2), conn)
 		}
@@ -127,8 +129,26 @@ func startUDPServer() {
 	}
 }
 
+// Websocket Server
+var upgrader = websocket.Upgrader{}
+
+func handler(w http.ResponseWriter, r *http.Request) {
+	c, err := upgrader.Upgrade(w, r, nil)
+
+	if err != nil {
+		fmt.Println("Websocket error:", err)
+		return
+	}
+
+	defer c.Close()
+}
+
+func startWebsocketServer() {
+
+}
+
 func main() {
 	go startTCPServer()
-	startUDPServer()
-	//startWebsocketServer()
+	go startUDPServer()
+	startWebsocketServer()
 }
