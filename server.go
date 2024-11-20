@@ -69,7 +69,11 @@ func handleTCPConnection(conn net.Conn) {
 				viewer := viewers[clientAddr]
 				streamer := str[3]
 				amountStr := str[4]
-				message := str[5]
+				message := ""
+
+				for i := 5; i < len(str); i++ {
+					message += " " + str[i]
+				}
 
 				amountInt, err := strconv.Atoi(amountStr)
 				var str2 string
@@ -159,7 +163,10 @@ func startUDPServer() {
 }
 
 // Websocket Server
-var upgrader = websocket.Upgrader{}
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  2048,
+	WriteBufferSize: 2048,
+}
 var streamers = make(map[string]*websocket.Conn)
 
 func websocketHandler(w http.ResponseWriter, r *http.Request) {
@@ -172,7 +179,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request) {
 
 	defer conn.Close()
 
-	fmt.Println(conn)
+	//fmt.Println(conn)
 
 	for {
 		// Read from client
@@ -188,6 +195,11 @@ func websocketHandler(w http.ResponseWriter, r *http.Request) {
 
 		if msg["type"] == "streamer" {
 			username := msg["username"]
+			if _, exists := streamers[username]; exists {
+				conn.WriteMessage(websocket.TextMessage, []byte("Username already taken."))
+				continue
+			}
+
 			streamers[username] = conn
 			fmt.Println("Registered streamer:", username)
 		}
@@ -211,8 +223,75 @@ func broadcastToWebsocket(conn *websocket.Conn, username string, amount int, str
 }
 
 func streamHandler(w http.ResponseWriter, r *http.Request) {
-	username = r.URL.Path[8:]
-	//fmt.Fprintf(w, "Hello, %s! Ready to stream?", r.URL.Path[8:])
+	username := r.URL.Path[8:]
+	html := `
+	<!DOCTYPE html>
+	<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>` + username + ` | Streaming</title>
+		<script src="https://cdn.tailwindcss.com"></script>
+	</head>
+	<body>
+		<div class="my-4 mx-4 flex">
+			<div class="w-8/12">
+				<div class="h-[32rem] mb-2 rounded-2xl bg-black text-white text-center place-content-center">
+					<h1 class="text-2xl font-bold">You're streaming!</h1>
+					<p>Pretend this is a screen.</p>
+				</div>
+				<div>
+					<h1 class="text-2xl font-bold">` + username + `'s stream</h2>
+				</div>
+			</div>
+			<div class="w-4/12 h-[32rem] ml-4">
+				<div class="h-10 bg-slate-300 rounded-t-2xl px-4 py-2 font-bold">Chat donations</div>
+				<div class="h-[29.5rem] bg-slate-100 rounded-b-2xl px-4 py-2 overflow-y-auto" id="donation-container">
+				</div>
+			</div>
+		</div>
+
+		<script>
+			const socket = new WebSocket("ws://localhost:8080/ws/");
+
+			socket.onmessage = function (e) {
+				const data = JSON.parse(e.data);
+				const donationContainer = document.getElementById("donation-container");
+
+				console.log(data);
+
+				if (isNaN(data.amount)) {
+					console.error("Invalid donation:", data.amount);
+				}
+				
+				const donation = document.createElement("div");
+				donation.className = "bg-rose-200 px-2 py-2 rounded-2xl mb-2";
+				donation.innerHTML = '<div class="flex items-center mb-1"><div class="w-3/4 flex items-center"><span class="h-8 w-8 rounded-full bg-rose-600 py-0.5 text-center text-white">'+data.from.charAt(0).toUpperCase()+'</span><p class="ml-2 w-auto">'+data.from+'</p></div><div class="w-1/4"><p class="text-right">Rp'+data.amount+'</p></div></div><hr class="border-rose-600" /><p>'+data.message+'</p>'
+			
+				donationContainer.appendChild(donation);
+			}
+
+			socket.onopen = () => {
+				const regMessage = {
+					type: "streamer",
+					username: "` + username + `"
+				};
+
+				socket.send(JSON.stringify(regMessage));
+			}
+
+			socket.onerror = (error) => {
+				console.error("WebSocket error:", error);
+			};
+
+			socket.onclose = () => {
+				console.log("WebSocket connection closed.");
+			};
+		</script>
+	</body>
+	</html>
+	`
+	fmt.Fprintf(w, html)
 }
 
 func startWebsocketServer() {

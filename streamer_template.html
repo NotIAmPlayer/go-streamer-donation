@@ -89,6 +89,23 @@
             const donationContainer = document.getElementById("donation-container");
             donationContainer.innerHTML += "<p>" + e.data + "</p>";
         }
+
+        socket.onopen = () => {
+            const regMessage = {
+                type: "streamer",
+                username: ""
+            };
+
+            socket.send(JSON.stringify(regMessage));
+        }
+
+        socket.onerror = (error) => {
+            console.error("WebSocket error:", error);
+        };
+
+        socket.onclose = () => {
+            console.log("WebSocket connection closed.");
+        };
     </script>
 </body>
 </html>
