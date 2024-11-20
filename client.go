@@ -19,14 +19,14 @@ func connectTCPServer() {
 
 	conn.Write([]byte("client:" + username + "\n"))
 
+	var input string
+
 	done := make(chan struct{})
 	go func() {
 		io.Copy(os.Stdout, conn)
 		//fmt.Println("done")
 		done <- struct{}{}
 	}()
-
-	var input string
 
 	for {
 		fmt.Println("SELECT AN OPTION")
@@ -68,6 +68,35 @@ func connectTCPServer() {
 			topUpBalance(conn.LocalAddr().String(), amountInt)
 		case "3": //TCP
 			fmt.Println("Preparing sending donation...")
+
+			var amountStr string
+			var amountInt int
+			var toStreamer string
+			var message string
+
+			fmt.Print("Input the streamer you want to send a donation to: ")
+			fmt.Scan(&toStreamer)
+
+			for {
+				fmt.Print("Input the amount you want to donate: ")
+				fmt.Scan(&amountStr)
+
+				temp, err := strconv.Atoi(amountStr)
+
+				if err != nil {
+					fmt.Println("Amount invalid. Please try again.")
+				} else if temp < 0 {
+					fmt.Println("Amount must be a positive value. Please try again.")
+				} else {
+					amountInt = temp
+					break
+				}
+			}
+
+			fmt.Print("Input a message to send: ")
+			fmt.Scan(&message)
+
+			conn.Write([]byte("donation:" + conn.LocalAddr().String() + ":" + toStreamer + ":" + strconv.Itoa(amountInt) + ":" + message + "\n"))
 		default:
 			fmt.Println("Input invalid. Please try again.")
 		}
@@ -81,6 +110,17 @@ func connectTCPServer() {
 
 	conn.Close()
 	<-done
+}
+
+func waitForResponse(conn net.Conn) {
+	buf := make([]byte, 1024)
+	n, err := conn.Read(buf)
+
+	if err != nil {
+		fmt.Println("Client - Error Reading Response:", err)
+	}
+
+	fmt.Println(string(buf[0:n]))
 }
 
 func checkBalance(addr string) {

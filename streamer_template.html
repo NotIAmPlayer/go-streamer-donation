@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>| Streaming</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div class="my-4 mx-4 flex">
+        <div class="w-8/12">
+            <div class="h-[32rem] mb-2 rounded-2xl bg-black text-white text-center place-content-center">
+                <h1 class="text-2xl font-bold">You're streaming!</h1>
+                <p>Pretend this is a screen.</p>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold">NAME's stream</h2>
+            </div>
+        </div>
+        <div class="w-4/12 h-[32rem] ml-4">
+            <div class="h-10 bg-slate-300 rounded-t-2xl px-4 py-2 font-bold">Chat donations</div>
+            <div class="h-[29.5rem] bg-slate-100 rounded-b-2xl px-4 py-2 overflow-y-auto" class="donation-container">
+                <!--
+                <div class="bg-rose-200 px-2 py-2 rounded-2xl mb-2">
+                    <div class="flex items-center mb-1">
+                        <div class="w-3/4 flex items-center">
+                            <span class="h-8 w-8 rounded-full bg-rose-600 py-0.5 text-center text-white">F</span>
+                            <p class="ml-2 w-auto">Foo</p>
+                        </div>
+                        <div class="w-1/4">
+                            <p class="text-left">Rp10.000,00</p>
+                        </div>
+                    </div>
+                    <hr class="border-rose-600" />
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                </div>
+
+                <div class="bg-amber-200 px-2 py-2 rounded-2xl mb-2">
+                    <div class="flex items-center mb-1">
+                        <div class="w-3/4 flex items-center">
+                            <span class="h-8 w-8 rounded-full bg-amber-600 py-0.5 text-center text-white">B</span>
+                            <p class="ml-2 w-auto">Bar</p>
+                        </div>
+                        <div class="w-1/4">
+                            <p class="text-left">Rp20.000,00</p>
+                        </div>
+                    </div>
+                    <hr class="border-amber-600" />
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                </div>
+
+                <div class="bg-emerald-200 px-2 py-2 rounded-2xl mb-2">
+                    <div class="flex items-center mb-1">
+                        <div class="w-3/4 flex items-center">
+                            <span class="h-8 w-8 rounded-full bg-emerald-600 py-0.5 text-center text-white">N</span>
+                            <p class="ml-2 w-auto">Noz</p>
+                        </div>
+                        <div class="w-1/4">
+                            <p class="text-left">Rp30.000,00</p>
+                        </div>
+                    </div>
+                    <hr class="border-emerald-600" />
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                </div>
+
+                <div class="bg-rose-200 px-2 py-2 rounded-2xl mb-2">
+                    <div class="flex items-center mb-1">
+                        <div class="w-3/4 flex items-center">
+                            <span class="h-8 w-8 rounded-full bg-rose-600 py-0.5 text-center text-white">F</span>
+                            <p class="ml-2 w-auto">Foo</p>
+                        </div>
+                        <div class="w-1/4">
+                            <p class="text-left">Rp10.000,00</p>
+                        </div>
+                    </div>
+                    <hr class="border-rose-600" />
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                </div>
+
+                -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const socket = new WebSocket("ws://localhost:8080/ws");
+
+        socket.onmessage = function (e) {
+            const donationContainer = document.getElementById("donation-container");
+            donationContainer.innerHTML += "<p>" + e.data + "</p>";
+        }
+    </script>
+</body>
+</html>

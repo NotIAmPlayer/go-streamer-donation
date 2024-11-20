@@ -2,7 +2,9 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
+	"log"
 	"net"
 	"net/http"
 	"strconv"
@@ -51,16 +53,43 @@ func handleTCPConnection(conn net.Conn) {
 	for input.Scan() {
 		txt := input.Text()
 
-		//fmt.Println(txt, len(txt))
+		fmt.Println(txt, len(txt))
 
 		if len(txt) >= 7 {
-			var reqType = txt[0:6]
-			var username = txt[7:]
+			str := strings.Split(txt, ":")
+			reqType := str[0]
 
-			fmt.Println(reqType, username)
+			fmt.Println(str)
 
 			if reqType == "client" { // Client-sent usernames
+				username := str[1]
 				viewers[addr] = User{username: username, balance: 0}
+			} else if reqType == "donation" {
+				clientAddr := str[1] + ":" + str[2]
+				viewer := viewers[clientAddr]
+				streamer := str[3]
+				amountStr := str[4]
+				message := str[5]
+
+				amountInt, err := strconv.Atoi(amountStr)
+				var str2 string
+
+				if err != nil {
+					str2 = "Amount invalid. Please try again."
+				} else if amountInt > viewer.balance {
+					str2 = "Donation amount is higher than account balance. Please try again."
+				} else {
+					if conn, exists := streamers[streamer]; exists {
+						viewer.balance -= amountInt
+						str2 = "Donated " + amountStr + " to " + streamer + "."
+						viewers[clientAddr] = viewer
+
+						broadcastToWebsocket(conn, viewer.username, amountInt, streamer, message)
+					} else {
+						str2 = "Streamer not found."
+					}
+				}
+				conn.Write([]byte(str2 + "\n"))
 			}
 		}
 	}
@@ -131,20 +160,66 @@ func startUDPServer() {
 
 // Websocket Server
 var upgrader = websocket.Upgrader{}
+var streamers = make(map[string]*websocket.Conn)
 
-func handler(w http.ResponseWriter, r *http.Request) {
-	c, err := upgrader.Upgrade(w, r, nil)
+func websocketHandler(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
 
 	if err != nil {
 		fmt.Println("Websocket error:", err)
 		return
 	}
 
-	defer c.Close()
+	defer conn.Close()
+
+	fmt.Println(conn)
+
+	for {
+		// Read from client
+		_, message, err := conn.ReadMessage()
+
+		if err != nil {
+			fmt.Println("Websocket Server - Reading error:", err)
+		}
+		fmt.Println("Received:", message)
+
+		var msg map[string]string
+		json.Unmarshal(message, &msg)
+
+		if msg["type"] == "streamer" {
+			username := msg["username"]
+			streamers[username] = conn
+			fmt.Println("Registered streamer:", username)
+		}
+	}
+}
+
+func broadcastToWebsocket(conn *websocket.Conn, username string, amount int, streamer string, message string) {
+	donationMessage := map[string]interface{}{
+		"type":    "donation",
+		"from":    username,
+		"amount":  amount,
+		"message": message,
+	}
+
+	msg, _ := json.Marshal(donationMessage)
+	err := conn.WriteMessage(websocket.TextMessage, msg)
+
+	if err != nil {
+		fmt.Println("Websocket - Broadcast error:", err)
+	}
+}
+
+func streamHandler(w http.ResponseWriter, r *http.Request) {
+	username = r.URL.Path[8:]
+	//fmt.Fprintf(w, "Hello, %s! Ready to stream?", r.URL.Path[8:])
 }
 
 func startWebsocketServer() {
+	http.HandleFunc("/ws/", websocketHandler)
+	http.HandleFunc("/stream/", streamHandler)
 
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
 func main() {
