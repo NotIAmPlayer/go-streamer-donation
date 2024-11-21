@@ -69,9 +69,11 @@ func handleTCPConnection(conn net.Conn) {
 				viewer := viewers[clientAddr]
 				streamer := str[3]
 				amountStr := str[4]
-				message := ""
+				message := str[5]
 
-				for i := 5; i < len(str); i++ {
+				fmt.Println(len(str))
+
+				for i := 6; i < len(str); i++ {
 					message += " " + str[i]
 				}
 
