@@ -265,6 +265,8 @@ func streamHandler(w http.ResponseWriter, r *http.Request) {
 				if (isNaN(data.amount)) {
 					console.error("Invalid donation:", data.amount);
 				}
+
+				data.message = data.message.replaceAll("_", " ");
 				
 				const donation = document.createElement("div");
 				donation.className = "bg-rose-200 px-2 py-2 rounded-2xl mb-2";
