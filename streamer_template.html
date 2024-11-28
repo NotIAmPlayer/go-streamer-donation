@@ -104,7 +104,7 @@
         };
 
         socket.onclose = () => {
-            console.log("WebSocket connection closed.");
+            socket.close();
         };
     </script>
 </body>

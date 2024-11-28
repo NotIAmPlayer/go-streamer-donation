@@ -289,7 +289,7 @@ func streamHandler(w http.ResponseWriter, r *http.Request) {
 			};
 
 			socket.onclose = () => {
-				console.log("WebSocket connection closed.");
+				socket.close();
 			};
 		</script>
 	</body>
