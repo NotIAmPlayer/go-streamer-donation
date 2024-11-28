@@ -112,17 +112,6 @@ func connectTCPServer() {
 	<-done
 }
 
-func waitForResponse(conn net.Conn) {
-	buf := make([]byte, 1024)
-	n, err := conn.Read(buf)
-
-	if err != nil {
-		fmt.Println("Client - Error Reading Response:", err)
-	}
-
-	fmt.Println(string(buf[0:n]))
-}
-
 func checkBalance(addr string) {
 	connectUDPServer("check:" + addr)
 }
