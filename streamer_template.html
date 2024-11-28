@@ -103,7 +103,7 @@
             console.error("WebSocket error:", error);
         };
 
-        socket.onclose = () => {
+        window.onbeforeunload = () => {
             socket.close();
         };
     </script>

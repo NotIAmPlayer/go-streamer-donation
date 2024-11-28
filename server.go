@@ -288,7 +288,7 @@ func streamHandler(w http.ResponseWriter, r *http.Request) {
 				console.error("WebSocket error:", error);
 			};
 
-			socket.onclose = () => {
+			window.onbeforeunload = () => {
 				socket.close();
 			};
 		</script>
