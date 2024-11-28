@@ -7,7 +7,7 @@ Simulates streaming platforms' (ex. Twitch or YouTube's superchat) donation syst
 * The client connects to the TCP server after entering their username. It sends username information, then starts a selection menu where the client acts as a viewer sending their donations.
 * **Check Balance:** The client connects to the UDP server and requests for the user balance. The client receives a response from the server, then the client continues as usual.
 * **Top-Up Balance:** The client inputs the amount to top-up their balance. The input has to be a positive number to proceed. If the input is a valid number, the client connects to the UDP server and awaits for a response.
-* **Send Donation:** 
+* **Send Donation:** The client inputs the streamer to donate to and the amount to donate. The amount has to be a positive number to proceed. The client then sends a TCP request then awaits a response.
 
 # Showcase
 YouTube link: https://youtu.be/NYC5OFg_7c4
